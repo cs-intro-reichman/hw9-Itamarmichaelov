@@ -57,9 +57,24 @@ public class MemorySpace {
 	 *        the length (in words) of the memory block that has to be allocated
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
-	public int malloc(int length) {		
-		//// Replace the following statement with your code
-		return -1;
+	public int malloc(int length) {  
+		Node current = freeList.getFirst(); // Start from the first block in the free list
+		while (current != null) {
+			MemoryBlock block = current.block; // Access the MemoryBlock associated with the current node
+			if (block.length >= length) { // Check if the block can satisfy the request
+				MemoryBlock allocatedBlock = new MemoryBlock(block.baseAddress, length);
+				allocatedList.addLast(allocatedBlock); // Add the new block to the allocated list
+				if (block.length == length) {
+					freeList.remove(current); // Remove the block if fully allocated
+				} else {
+					block.baseAddress += length; // Update the free block's base address
+					block.length -= length; // Update the free block's length
+				}
+				return allocatedBlock.baseAddress; // Return the base address of the allocated block
+			}
+			current = current.next; // Move to the next free block
+		}
+		return -1; // Return -1 if no suitable block is found
 	}
 
 	/**
@@ -71,7 +86,16 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		//// Write your code here
+		Node current = allocatedList.getFirst(); // Start at the first node in the allocated list
+		while (current != null) {
+			MemoryBlock block = current.block; // Access the block from the node
+			if (block.baseAddress == address) { // Check if the base address matches
+				allocatedList.remove(current); // Remove the block from the allocated list
+				freeList.addLast(block); // Add it to the free list
+				return; // Exit after freeing the block
+			}
+			current = current.next; // Move to the next node
+		}
 	}
 	
 	/**
@@ -79,16 +103,41 @@ public class MemorySpace {
 	 * for debugging purposes.
 	 */
 	public String toString() {
-		return freeList.toString() + "\n" + allocatedList.toString();		
+		return freeList.toString() + "\n" + allocatedList.toString();
 	}
 	
 	/**
-	 * Performs defragmantation of this memory space.
+	 * Performs defragmentation of this memory space.
 	 * Normally, called by malloc, when it fails to find a memory block of the requested size.
-	 * In this implementation Malloc does not call defrag.
 	 */
 	public void defrag() {
-		/// TODO: Implement defrag test
-		//// Write your code here
+		boolean swapped;
+		do {
+			swapped = false;
+			Node current = freeList.getFirst();
+			while (current != null && current.next != null) {
+				MemoryBlock currentBlock = current.block;
+				MemoryBlock nextBlock = current.next.block;
+				if (currentBlock.baseAddress > nextBlock.baseAddress) {
+					MemoryBlock temp = current.block;
+					current.block = nextBlock;
+					current.next.block = temp;
+					swapped = true;
+				}
+				current = current.next;
+			}
+		} while (swapped);
+
+		Node current = freeList.getFirst();
+		while (current != null && current.next != null) {
+			MemoryBlock currentBlock = current.block;
+			MemoryBlock nextBlock = current.next.block;
+			if (currentBlock.baseAddress + currentBlock.length == nextBlock.baseAddress) {
+				currentBlock.length += nextBlock.length;
+				freeList.remove(current.next);
+			} else {
+				current = current.next;
+			}
+		}
 	}
 }
