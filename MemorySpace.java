@@ -57,25 +57,44 @@ public class MemorySpace {
 	 *        the length (in words) of the memory block that has to be allocated
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
-	public int malloc(int length) {  
-		Node current = freeList.getFirst(); // Start from the first block in the free list
-		while (current != null) {
-			MemoryBlock block = current.block; // Access the MemoryBlock associated with the current node
-			if (block.length >= length) { // Check if the block can satisfy the request
-				MemoryBlock allocatedBlock = new MemoryBlock(block.baseAddress, length);
-				allocatedList.addLast(allocatedBlock); // Add the new block to the allocated list
-				if (block.length == length) {
-					freeList.remove(current); // Remove the block if fully allocated
-				} else {
-					block.baseAddress += length; // Update the free block's base address
-					block.length -= length; // Update the free block's length
+	public int malloc(int length) {
+		ListIterator iterator = freeList.iterator(); // Create an iterator for the free list
+		Node previous = null; // Keep track of the previous node
+	
+		while (iterator.hasNext()) {
+			Node current = iterator.current; // Current node
+			MemoryBlock freeBlock = iterator.next(); // Access the memory block
+	
+			if (freeBlock.length >= length) {
+				// Create a new allocated block
+				MemoryBlock allocatedBlock = new MemoryBlock(freeBlock.baseAddress, length);
+				allocatedList.addLast(allocatedBlock);
+	
+				// Update or remove the free block
+				freeBlock.baseAddress += length;
+				freeBlock.length -= length;
+				if (freeBlock.length == 0) {
+					if (previous == null) {
+						freeList.getFirst().next = current.next; // Update head if needed
+					} else {
+						previous.next = current.next; // Bypass the current node
+					}
+					freeList.remove(current.block); // Remove fully used block
 				}
-				return allocatedBlock.baseAddress; // Return the base address of the allocated block
+	
+				return allocatedBlock.baseAddress; // Return the allocated base address
 			}
-			current = current.next; // Move to the next free block
+	
+			// Update previous node and continue iteration
+			previous = current;
 		}
+	
 		return -1; // Return -1 if no suitable block is found
 	}
+
+	
+	
+	
 
 	/**
 	 * Frees the memory block whose base address equals the given address.

@@ -1,3 +1,5 @@
+import java.util.function.Function;
+
 /**
  * Represents a list of Nodes. 
  */
@@ -142,6 +144,9 @@ public class LinkedList {
 	 */
 	public MemoryBlock getBlock(int index) {
 		//// Replace the following statement with your code
+		if (getNode(index) == null) {
+			throw new IllegalArgumentException("index must be between 0 and size");
+		}
 		return getNode(index).block;
 	}	
 
@@ -176,7 +181,7 @@ public class LinkedList {
 	public void remove(Node node) {
 		//// Write your code here
 		if (node == null) {
-			throw new IllegalArgumentException("Node cannot be null");
+			throw new NullPointerException("Node cannot be null");
 		}
 		if (node == first) {
 			remove(0);
@@ -226,7 +231,7 @@ public class LinkedList {
 		
 		size--;
 	}
-
+	
 	/**
 	 * Removes from this list the node pointing to the given memory block.
 	 * 
@@ -238,7 +243,7 @@ public class LinkedList {
 		//// Write your code here
 		int index = indexOf(block);
 		if (index == -1) {
-			throw new IllegalArgumentException("Block not found in the list");
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 		remove(index);
 	} 	
